@@ -1,0 +1,50 @@
+name: Build Liquid Glass Icons
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "liquid-glass-icons-project.zip"
+      - ".github/workflows/build.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android build components
+        run: |
+          sdkmanager "platform-tools" "platforms;android-36" "build-tools;36.0.0" "ndk;27.0.12077973" "cmake;3.22.1"
+
+      - name: Extract raw project ZIP
+        run: |
+          test -f liquid-glass-icons-project.zip
+          unzip -q liquid-glass-icons-project.zip -d .
+          test -f settings.gradle.kts
+          test -f app/build.gradle.kts
+          test -f gradlew
+          chmod +x gradlew
+
+      - name: Build release APK
+        run: ./gradlew --no-daemon --stacktrace :app:assembleRelease
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Liquid-Glass-Icons-release
+          path: app/build/outputs/apk/release/*.apk
+          if-no-files-found: error
