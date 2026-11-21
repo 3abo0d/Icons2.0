@@ -1,3 +1,4 @@
+
 name: Build Liquid Glass Icons
 
 on:
@@ -13,6 +14,7 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -26,9 +28,18 @@ jobs:
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
 
+      - name: Accept Android SDK licenses
+        run: |
+          yes | sdkmanager --licenses
+
       - name: Install Android build components
         run: |
-          sdkmanager "platform-tools" "platforms;android-36" "build-tools;36.0.0" "ndk;27.0.12077973" "cmake;3.22.1"
+          sdkmanager --install \
+            "platform-tools" \
+            "platforms;android-36" \
+            "build-tools;36.0.0" \
+            "ndk;27.0.12077973" \
+            "cmake;3.22.1"
 
       - name: Extract raw project ZIP
         run: |
@@ -40,7 +51,8 @@ jobs:
           chmod +x gradlew
 
       - name: Build release APK
-        run: ./gradlew --no-daemon --stacktrace :app:assembleRelease
+        run: |
+          ./gradlew --no-daemon --stacktrace :app:assembleRelease
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
